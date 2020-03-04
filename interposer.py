@@ -1,3 +1,4 @@
+""" Man-in-the-middle that closes connection after specific number of bytes """
 import asyncio
 import logging
 import socket
@@ -14,7 +15,7 @@ async def main():
     downstream.setblocking(0)
     upstream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     upstream.setblocking(0)
-    await loop.sock_connect(upstream, ("localhost", 2016))
+    await loop.sock_connect(upstream, ("httpbin.org", 443))
 
     async def pump(fro, to, limit=2**32):
         while limit > 0:
