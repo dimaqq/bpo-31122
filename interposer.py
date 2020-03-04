@@ -8,26 +8,31 @@ async def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.setblocking(0)
-    server.bind(("localhost", 2123))
+    server.bind(("localhost", 31122))
     server.listen(1)
     
-    downstream, source = await loop.sock_accept(server)
-    downstream.setblocking(0)
-    upstream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    upstream.setblocking(0)
-    await loop.sock_connect(upstream, ("httpbin.org", 443))
+    while True:
+        downstream, source = await loop.sock_accept(server)
 
-    async def pump(fro, to, limit=2**32):
-        while limit > 0:
-            data = (await loop.sock_recv(fro, 1024))[:limit]
-            if not data:
-                return
-            await loop.sock_sendall(to, data)
-            limit -= len(data)
-        else:
-            to.close()
+        async def serve():
+            downstream.setblocking(0)
+            upstream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            upstream.setblocking(0)
+            await loop.sock_connect(upstream, ("httpbin.org", 443))
 
-    await asyncio.gather(pump(downstream, upstream), pump(upstream, downstream, limit=100))
+            async def pump(fro, to, limit=2**32):
+                while limit > 0:
+                    data = (await loop.sock_recv(fro, 1024))[:limit]
+                    if not data:
+                        return
+                    await loop.sock_sendall(to, data)
+                    limit -= len(data)
+                else:
+                    to.close()
+
+            await asyncio.gather(pump(downstream, upstream), pump(upstream, downstream, limit=100))
+
+        asyncio.create_task(serve())
 
 
 logging.basicConfig(level=logging.INFO)
