@@ -9,10 +9,13 @@ https://bugs.python.org/issue31122
 - [ ] Python-3.9.0a4 buggy
 - [x] Python-2.7.16 OK, raises `ssl.SSLEOFError`
 
+#### Schematic
 
 `client.py` → `interposer.py` → `httpbin.org`
 
 (local port) `localhost:31122` `httpbin.org:443`
+
+#### Instructions
 
 Run the interposer, that acts as man-in-the-middle and closes client's connection after specific number of bytes is delivered from upstream to the client.
 
